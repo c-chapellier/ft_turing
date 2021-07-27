@@ -1,21 +1,20 @@
-NAME = ft_turing
- 
-all:
-		dune build
+SRCS =	main.hs \
+		Transition.hs Machine.hs \
 
-run:	all
-		dune exec ./ft_turing.exe
+OBJS = ${SRCS:.hs=.o}
+IBJS = ${SRCS:.hs=.hi}
 
-install:
-		brew install opam
-		opam init
-		eval `opam env`
-		opam switch create 4.11.1
-		eval `opam env`
- 
-clean:
+NAME =	ft_turing
 
-# dune init exe ft_turing
+all :		${NAME}
 
+${NAME} :	
+			ghc -o ${NAME} main.hs
 
-# ocamlopt and ocamlc
+clean :
+			rm -f ${OBJS} ${IBJS}
+
+fclean :	clean
+			rm -f ${NAME}
+
+re :		fclean all
