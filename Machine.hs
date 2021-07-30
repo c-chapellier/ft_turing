@@ -6,7 +6,7 @@ import Data.Aeson as Aeson ( FromJSON, ToJSON )
 import qualified Data.Map as Map
 import qualified GHC.Generics as Generics
 
-import Transition ( Transition )
+import Transition ( Transition(read, to_state, write, action) )
 
 data Machine = Machine
     { name          :: String
@@ -38,3 +38,22 @@ instance Show Machine where
 
 instance FromJSON Machine
 instance ToJSON Machine
+
+checkTransition :: Machine -> Transition -> Bool
+checkTransition m t = Transition.read t `elem` Machine.alphabet m
+    && Transition.to_state t `elem` Machine.states m
+    && Transition.write t `elem` Machine.alphabet m
+    && Transition.action t `elem` ["LEFT", "RIGHT"]
+
+checkTransitions :: Machine -> (String, [Transition]) -> Bool
+checkTransitions m (key, t) = all (checkTransition m) t
+
+check :: Machine -> String -> Either String Machine
+check m input = if all ((== 1) . length) (Machine.alphabet m)
+    && all (`elem` concat (Machine.alphabet m)) input
+    && notElem (head (Machine.blank m)) input
+    && elem (Machine.blank m) (Machine.alphabet m)
+    && all (`elem` Machine.states m) (Machine.finals m)
+    && all (checkTransitions m) (Map.toAscList (Machine.transitions m))
+                    then Right m
+                    else Left "Parsing error, check you config file young man"

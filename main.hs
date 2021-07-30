@@ -1,12 +1,14 @@
 {-# LANGUAGE OverloadedStrings, DeriveGeneric #-}
 
 import qualified Data.Map as Map
-import Data.Aeson as Aeson ( eitherDecode )
+import qualified Data.List as List
+import qualified Data.Maybe as Maybe
+import qualified Data.Aeson as Aeson ( eitherDecode )
 import qualified Data.ByteString.Lazy as ByteStringLazy
-import System.Environment ( getArgs )
+import qualified System.Environment as Env ( getArgs )
 
-import Machine
-import Transition
+import Machine ( Machine(transitions, finals, initial), check )
+import Transition ( Transition(..) )
 
 getUsage :: String
 getUsage = "usage: ft_turing [-h] jsonfile input\n"
@@ -22,48 +24,41 @@ getUsage = "usage: ft_turing [-h] jsonfile input\n"
 getJSON :: String -> IO ByteStringLazy.ByteString
 getJSON = ByteStringLazy.readFile
 
-checkTransition :: Machine -> Transition -> Bool
-checkTransition m t = Transition.read t `elem` Machine.alphabet m
-    && Transition.to_state t `elem` Machine.states m
-    && Transition.write t `elem` Machine.alphabet m
-    && Transition.action t `elem` ["LEFT", "RIGHT"]
+showTape :: String -> Int -> String
+showTape tape head = take head tape ++ "<" ++ [tape !! head] ++ ">" ++ drop (head + 1) tape
 
-checkTransitions :: Machine -> (String, [Transition]) -> Bool
-checkTransitions m (key, t) = all (checkTransition m) t
+showStep :: String -> Int -> String -> Transition -> String
+showStep tape head state t = "[" ++ showTape tape head ++ "........] (" ++ state ++ ", " ++ show t ++ ")"
 
-checkConfig :: Machine -> String -> Either String Machine
-checkConfig m input = if all ((== 1) . length) (Machine.alphabet m)
-    && notElem (head (Machine.blank m)) input
-    && elem (Machine.blank m) (Machine.alphabet m)
-    && all (`elem` Machine.states m) (Machine.finals m)
-    && all (checkTransitions m) (Map.toAscList (Machine.transitions m))
-                    then Right m
-                    else Left "Parsing error, check you config file young man"
+isCurrentChar :: String -> Transition -> Bool
+isCurrentChar cell t = cell == Transition.read t
 
--- add head
-showStep :: String -> String -> Transition -> String
-showStep tape k t = "[" ++ tape ++ "........] (" ++ k ++ ", " ++ show t ++ ")\n"
+nextStep :: Machine -> String -> String -> Int -> IO ()
+nextStep m state tape head = do
+    let t = Maybe.fromMaybe (Transition "" "" "" "") (List.find (isCurrentChar [tape !! head]) (transitions m Map.! state))
+    print (showStep tape head state t)
+    let newState = Transition.to_state t
+    let newTape = take head tape ++ Transition.write t ++ drop (head + 1) tape
+    let newHead = if Transition.action t == "RIGHT" then head + 1 else head - 1
+    if newState `elem` Machine.finals m then print "Done" else nextStep m newState newTape newHead
 
-run :: Machine -> String -> String
-run m input = showStep input 
+run :: Either String Machine -> String -> IO ()
+run (Left err) tape = putStrLn err
+run (Right m) tape = do
+        print m
+        nextStep m (Machine.initial m) tape 0
+
+checkConfig :: Either String Machine -> String -> IO ()
+checkConfig (Left err) tape = putStrLn err
+checkConfig (Right m) tape = run (Machine.check m tape) tape
+
+loadConfig :: [String] -> IO ()
+loadConfig [configFile, tape] = do
+            m <- Aeson.eitherDecode <$> getJSON configFile
+            checkConfig m tape
+loadConfig _ = putStrLn getUsage
 
 main :: IO ()
 main = do
-    args <- getArgs
-    case args of
-        [jsonfile, input] -> do
-            rc <- (Aeson.eitherDecode <$> getJSON jsonfile) :: IO (Either String Machine)
-            case rc of
-                Left err -> putStrLn err
-                Right m 1-> do
-                    print m1
-                    let d = checkConfig m1 input :: Either String Machine
-                    case d of
-                        Left err -> putStrLn err
-                        Right m2 -> do
-                            print "Parsing ok"
-                            run m2 input
-        _ -> putStrLn getUsage
-
-
-
+    args <- Env.getArgs
+    loadConfig args
