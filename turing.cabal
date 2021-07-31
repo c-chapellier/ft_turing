@@ -4,7 +4,7 @@ version:            0.1
 extra-source-files: README.md
 
 library
-  exposed-modules:  Machine, Transition
+  exposed-modules:  Color, Machine, Transition
   hs-source-dirs:   src
   build-depends:    base, aeson, containers
   default-language: Haskell2010

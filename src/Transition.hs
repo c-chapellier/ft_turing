@@ -2,8 +2,10 @@
 
 module Transition where
 
-import Data.Aeson as Aeson ( FromJSON, ToJSON )
+import qualified Data.Aeson as Aeson ( FromJSON, ToJSON )
 import qualified GHC.Generics as Generics
+
+import qualified Color
 
 data Transition = Transition
     { read          :: String
@@ -13,7 +15,7 @@ data Transition = Transition
     } deriving (Generics.Generic)
 
 instance Show Transition where
-    show a = Transition.read a ++ ") -> (" ++ to_state a ++ ", " ++ write a ++ ", " ++ action a
+    show a = Color.red (Transition.read a) ++ ") -> (" ++ Color.blue (to_state a) ++ ", " ++ Color.magenta (write a) ++ ", " ++ Color.green (action a)
 
-instance FromJSON Transition
-instance ToJSON Transition
+instance Aeson.FromJSON Transition
+instance Aeson.ToJSON Transition
