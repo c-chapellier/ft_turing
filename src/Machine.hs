@@ -28,13 +28,13 @@ showTransitions (k, t) = concatMap (showTransition k) t
 instance Show Machine where
   show a =
     "********************************************************************************"
-    ++ "\nName : "     ++  name a
-    ++ "\nAlphabet: "  ++  show (alphabet a)
-    ++ "\nBlank: "     ++  blank a
-    ++ "\nStates : "   ++  show (states a)
-    ++ "\nInitial : "  ++  initial a
-    ++ "\nFinals : "   ++  show (finals a)
-    ++ "\n"            ++  concatMap showTransitions (Map.toAscList (transitions a))
+    ++ Color.yellow "\nName : "     ++  name a
+    ++ Color.yellow "\nAlphabet: "  ++  show (alphabet a)
+    ++ Color.yellow "\nBlank: "     ++  blank a
+    ++ Color.yellow "\nStates : "   ++  show (states a)
+    ++ Color.yellow "\nInitial : "  ++  initial a
+    ++ Color.yellow "\nFinals : "   ++  show (finals a)
+    ++ "\n"                         ++  concatMap showTransitions (Map.toAscList (transitions a))
     ++ "********************************************************************************"
 
 instance Aeson.FromJSON Machine
@@ -50,11 +50,18 @@ checkTransitions :: Machine -> (String, [Transition.Transition]) -> Bool
 checkTransitions m (key, t) = all (checkTransition m) t
 
 check :: Machine -> String -> Either String Machine
-check m input = if all ((== 1) . length) (Machine.alphabet m)
-    && all (`elem` concat (Machine.alphabet m)) input
-    && notElem (head (Machine.blank m)) input
-    && elem (Machine.blank m) (Machine.alphabet m)
-    && all (`elem` Machine.states m) (Machine.finals m)
-    && all (checkTransitions m) (Map.toAscList (Machine.transitions m))
-                    then Right m
-                    else Left "Parsing error, check you config file young man"
+check m input =
+    if all ((== 1) . length) (Machine.alphabet m)
+    then if all (`elem` concat (Machine.alphabet m)) input
+        then if head (Machine.blank m) `notElem` input
+            then if Machine.blank m `elem` Machine.alphabet m
+                then if all (`elem` Machine.states m) (Machine.finals m)
+                    then if all (checkTransitions m) (Map.toAscList (Machine.transitions m))
+                        then Right m
+                        else Left "Parsing error, transitions not good"
+                    else Left "Parsing error, finals must be states"
+                else Left "Parsing error, blank char not in alphabet"
+            else Left "Parsing error, the blank char must not be in the input"
+        else Left "Parsing error, not all input chars are in alphabet"
+    else Left "Parsing error, alphabets not size 1"
+    

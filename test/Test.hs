@@ -1,15 +1,13 @@
-import Control.Exception (evaluate)
-import Test.Hspec
-import Test.QuickCheck
+import qualified Test.Hspec as Hspec
+import qualified Test.QuickCheck as QuickCheck
+
+import qualified Turing
 
 main :: IO ()
--- main = putStrLn "Test suite not yet implemented"
 main =
-  hspec $ do
-    describe "Prelude.head" $ do
-      it "returns the first elem of a list" $ do
-        head [23 ..] `shouldBe` (23 :: Int)
-      it "returns the first element of an *arbitrary* list" $
-        property $ \x xs -> head (x : xs) == (x :: Int)
-      it "throws an exception if used with an empty list" $ do
-        evaluate (head []) `shouldThrow` anyException
+  Hspec.hspec $ do
+    Hspec.describe "Prelude.head" $ do
+      Hspec.it "returns the first elem of a list" $ do
+        head [23 ..] `Hspec.shouldBe` (23 :: Int)
+      -- Hspec.it "returns the first element of an *arbitrary* list" $
+      --   QuickCheck.property $ \x xs -> head (x : xs) == (x :: Int)
