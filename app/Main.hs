@@ -1,4 +1,6 @@
-{-# LANGUAGE OverloadedStrings, DeriveGeneric #-}
+module Main where
+
+-- {-# LANGUAGE OverloadedStrings, DeriveGeneric #-}
 
 import qualified Data.Map as Map
 import qualified Data.List as List
@@ -62,3 +64,4 @@ main :: IO ()
 main = do
     args <- Env.getArgs
     loadConfig args
+

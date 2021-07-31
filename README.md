@@ -1,6 +1,22 @@
 # ft_turing
 Functionnal implementation of a single infinite tape Turing machine.
 
+## Install Haskell & Cabal
+```bash
+curl https://get-ghcup.haskell.org -sSf | sh
+```
+
+## Compile & Run
+```bash
+cabal run exe:turing configFile tape
+```
+
+## Test
+```bash
+cabal run test:turing-test
+```
+
+## Misc
 ```hs
 usefulResources :: [String]
 usefulResources = [

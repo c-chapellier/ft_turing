@@ -1,0 +1,11 @@
+cradle:
+  cabal:
+    - path: "./"
+      component: "lib:turing"
+
+    - path: "./app/"
+      component: "exe:turing"
+
+    - path: "./test/"
+      component: "test:turing-test"
+    
