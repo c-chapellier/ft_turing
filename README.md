@@ -20,6 +20,13 @@ unary_sub.json 11-11=   ->
 unary_sub.json 111-1=   -> 11
 ```
 
+### Universal Unary Substraction
+```bash
+./app/configs/universal.json '(.|e|a.a.>1a1>-a->=b.<|b1c=<-e.<|c1c1<-d-<|d.d.<1a.>!@111-11=)'   -> 1
+./app/configs/universal.json '(.|e|a.a.>1a1>-a->=b.<|b1c=<-e.<|c1c1<-d-<|d.d.<1a.>!@11-11=)'    ->
+./app/configs/universal.json '(.|e|a.a.>1a1>-a->=b.<|b1c=<-e.<|c1c1<-d-<|d.d.<1a.>!@111-1=)'    -> 11
+```
+
 ### Unary Addition
 ```bash
 unary_sub.json 111+11=  -> 11111
