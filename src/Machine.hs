@@ -2,6 +2,7 @@
 
 module Machine where
 
+import qualified Debug.Trace as Trace
 import qualified Data.Aeson as Aeson ( FromJSON, ToJSON )
 import qualified Data.Map as Map
 import qualified GHC.Generics as Generics
@@ -40,11 +41,28 @@ instance Show Machine where
 instance Aeson.FromJSON Machine
 instance Aeson.ToJSON Machine
 
+check1 :: Machine -> Transition.Transition -> Bool
+check1 m t = if Transition.read t `elem` Machine.alphabet m
+            then Transition.read t `elem` Machine.alphabet m
+            else Trace.trace (Transition.read t ++ " not in " ++ show (Machine.alphabet m)) (Transition.read t `elem` Machine.alphabet m)
+
+check2 :: Machine -> Transition.Transition -> Bool
+check2 m t  = if Transition.to_state t `elem` Machine.states m
+            then Transition.to_state t `elem` Machine.states m
+            else Trace.trace (Transition.to_state t ++ " not in states") (Transition.to_state t `elem` Machine.states m)
+
+check3 :: Machine -> Transition.Transition -> Bool
+check3 m t = if Transition.write t `elem` Machine.alphabet m
+            then Transition.write t `elem` Machine.alphabet m
+            else Trace.trace (Transition.write t ++ " not in " ++ show (Machine.alphabet m)) (Transition.write t `elem` Machine.alphabet m)
+
+check4 :: Machine -> Transition.Transition -> Bool
+check4 m t = if Transition.action t `elem` ["LEFT", "RIGHT"]
+            then Transition.action t `elem` ["LEFT", "RIGHT"]
+            else Trace.trace (Transition.action t ++ " not in " ++ show ["LEFT", "RIGHT"]) (Transition.action t `elem` ["LEFT", "RIGHT"])
+
 checkTransition :: Machine -> Transition.Transition -> Bool
-checkTransition m t = Transition.read t `elem` Machine.alphabet m
-    && Transition.to_state t `elem` Machine.states m
-    && Transition.write t `elem` Machine.alphabet m
-    && Transition.action t `elem` ["LEFT", "RIGHT"]
+checkTransition m t = and [check1 m t, check2 m t, check3 m t, check4 m t]
 
 checkTransitions :: Machine -> (String, [Transition.Transition]) -> Bool
 checkTransitions m (key, t) = all (checkTransition m) t

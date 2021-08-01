@@ -21,14 +21,17 @@ getUsage = "usage: ft_turing [-h] jsonfile input\n"
     ++ "optional arguments:\n"
     ++ "    -h, --help      show this help message and exit\n"
 
+getExtraTape :: Machine.Machine -> String
+getExtraTape m = Machine.blank m ++ Machine.blank m ++ Machine.blank m
+
 getJSON :: String -> IO ByteStringLazy.ByteString
 getJSON = ByteStringLazy.readFile
 
 showTape :: String -> Int -> String
 showTape tape head = Color.yellow (take head tape) ++ Color.red [tape !! head] ++ Color.yellow (drop (head + 1) tape)
 
-showStep :: String -> Int -> String -> Transition.Transition -> String
-showStep tape head state t = "[" ++ showTape tape head ++ Color.yellow "..." ++ "] (" ++ Color.cyan state ++ ", " ++ show t ++ ")"
+showStep :: Machine.Machine -> String -> Int -> String -> Transition.Transition -> String
+showStep m tape head state t = "[" ++ showTape tape head ++ Color.yellow (getExtraTape m) ++ "] (" ++ Color.cyan state ++ ", " ++ show t ++ ")"
 
 isCurrentChar :: String -> Transition.Transition -> Bool
 isCurrentChar cell t = cell == Transition.read t
@@ -37,12 +40,12 @@ nextStep :: Machine.Machine -> String -> String -> Int -> IO ()
 nextStep m state tape head = do
     let checkedTape = if head == length tape then tape ++ Machine.blank m else tape
     let t = Maybe.fromMaybe (Transition.Transition "" "" "" "") (List.find (isCurrentChar [checkedTape !! head]) (Machine.transitions m Map.! state))
-    putStrLn (showStep checkedTape head state t)
+    putStrLn (showStep m checkedTape head state t)
     let newState = Transition.to_state t
     let newTape = take head checkedTape ++ Transition.write t ++ drop (head + 1) checkedTape
     let newHead = if Transition.action t == "RIGHT" then head + 1 else head - 1
     if newState `elem` Machine.finals m
-        then putStrLn ("[" ++ Color.yellow (newTape ++ "...") ++ "]")
+        then putStrLn ("[" ++ Color.yellow (newTape ++ getExtraTape m) ++ "]")
         else nextStep m newState newTape newHead
 
 run :: Either String Machine.Machine -> String -> IO ()
